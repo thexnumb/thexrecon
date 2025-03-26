@@ -1,6 +1,6 @@
-# THEXRECON Subdomain Enumeration Script Tool
+# THEXRECON Subdomain Enumeration Python Tool
 
-A comprehensive tool for automating subdomain enumeration across multiple bug bounty programs using various techniques and sources.
+A comprehensive python tool for automating subdomain enumeration across multiple bug bounty programs using various techniques and sources.
 
 ## Features
 
@@ -30,7 +30,16 @@ A comprehensive tool for automating subdomain enumeration across multiple bug bo
 │   │   └── google.nl.txt
 │   └── microsoft/
 │       └── microsoft.com.txt
-├── thexrecon.sh                  # Main script that executes all functions
+│── modules/                # Contains of all modules
+│   │── __init__.py
+│   │── abuseipdb.py
+│   │── subcenter.py
+│   │── subfinder.py
+│   │── chaos.py
+│   │── crtsh.py
+│   │── gau.py
+│   │── wayback.py
+├── thexrecon.py            # Main script that executes all functions
 └── README.md               # This documentation
 ```
 
@@ -39,8 +48,8 @@ A comprehensive tool for automating subdomain enumeration across multiple bug bo
 You need to install the following tools:
 
 ```bash
-# For Debian-based systems
-apt install curl jq postgresql-client
+# Install python requirements
+pip install -r requirements.txt 
 
 # Install Go-based tools
 go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
@@ -66,44 +75,44 @@ Make sure these tools are in your PATH.
    echo "microsoft.com" > programs/microsoft.txt
    ```
 
-3. Make the script executable:
+3. Make the python script executable:
    ```bash
-   chmod +x thexrecon.sh
+   chmod +x thexrecon.py
    ```
 
-4. Update the AbuseIPDB session cookie:
-   - Open `thexrecon.sh` and replace `YOUR-SESSION` in the `abuseipdb` function with your actual session cookie
+4. Update the **AbuseIPDB** session cookie:
+   - Open `thexrecon.py` and replace `YOUR-SESSION` in the `abuseipdb` function with your actual session cookie
 
 ## Usage
 
 ### Process all programs
 
 ```bash
-./thexrecon.sh
+./thexrecon.py
 ```
 
 ### Check dependencies
 
 ```bash
-./thexrecon.sh -c
+./thexrecon.py -c
 ```
 
 ### Process a specific program
 
 ```bash
-./thexrecon.sh -p google
+./thexrecon.py -p google
 ```
 
 ### Process a specific domain in a program
 
 ```bash
-./thexrecon.sh -p google -d google.com
+./thexrecon.py -p google -d google.com
 ```
 
 ### Get help
 
 ```bash
-./thexrecon.sh -h
+./thexrecon.py -h
 ```
 
 ## Adding New Programs
@@ -130,7 +139,7 @@ Each file contains a list of unique subdomains, one per line.
 
 ## Customization
 
-You can add or modify functions in the `thexrecon.sh` script to include additional data sources or techniques.
+You can add or modify functions in the `thexrecon.py` script to include additional data sources or techniques.
 
 ## Notes
 
