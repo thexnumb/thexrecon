@@ -39,6 +39,7 @@ A comprehensive python tool for automating subdomain enumeration across multiple
 │   │── crtsh.py
 │   │── gau.py
 │   │── wayback.py
+├── requirements.txt
 ├── thexrecon.py            # Main script that executes all functions
 └── README.md               # This documentation
 ```
