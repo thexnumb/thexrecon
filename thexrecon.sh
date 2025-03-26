@@ -9,7 +9,7 @@ mkdir -p programs subdomains
 # Function to get WHOIS information from AbuseIPDB
 abuseipdb() {
     local domain="$1"
-    echo "[+] Running AbuseIPDB for $domain"
+    echo "[+] Running AbuseIPDB for $domain" >&2
     curl -s "https://www.abuseipdb.com/whois/$domain" \
         -H "user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36" \
         -b "abuseipdb_session=YOUR-SESSION" | \
@@ -19,14 +19,14 @@ abuseipdb() {
 # Function to query subdomain.center API
 subcenter() {
     local domain="$1"
-    echo "[+] Running Subdomain Center for $domain"
+    echo "[+] Running Subdomain Center for $domain" >&2
     curl -s "https://api.subdomain.center/?domain=$domain" | jq -r '.[]'
 }
 
 # Function to run subfinder with filtering
 nice_subfinder() {
     local domain="$1"
-    echo "[+] Running Subfinder for $domain"
+    echo "[+] Running Subfinder for $domain" >&2
     local res
     # Use subfinder directly without zsh (more compatible with GitHub Actions)
     res=$(subfinder -d "$domain" -all -silent)
@@ -40,7 +40,7 @@ nice_subfinder() {
 # Function to run chaos with filtering
 nice_chaos() {
     local domain="$1"
-    echo "[+] Running Chaos for $domain"
+    echo "[+] Running Chaos for $domain" >&2
     local res
     # Use chaos directly without zsh
     res=$(chaos -d "$domain" -silent)
@@ -54,7 +54,7 @@ nice_chaos() {
 # Function to query crt.sh
 crtsh() {
     local domain="$1"
-    echo "[+] Running crt.sh for $domain"
+    echo "[+] Running crt.sh for $domain" >&2
     
     # Check if psql is available, otherwise use curl as fallback
     if command -v psql &> /dev/null; then
@@ -76,7 +76,7 @@ END
 # Function to use gau for subdomain discovery
 nice_gau() {
     local domain="$1"
-    echo "[+] Running GAU for $domain"
+    echo "[+] Running GAU for $domain" >&2
     local res
     # Use gau directly without zsh
     res=$(gau "$domain" --threads 10 --subs | unfurl -u domains)
@@ -90,7 +90,7 @@ nice_gau() {
 # Function to use Wayback Machine for subdomain discovery
 nice_wayback() {
     local domain="$1"
-    echo "[+] Running Wayback for $domain"
+    echo "[+] Running Wayback for $domain" >&2
     local res
     res=$(curl -s "https://web.archive.org/cdx/search/cdx?url=*.$domain/*&fl=original&collapse=urlkey" | unfurl -u domains)
     echo "$res" | while IFS= read -r sub; do
@@ -115,13 +115,13 @@ process_domain() {
     
     # Run all the enumeration functions and append results to temp file
     # Use || true to continue even if a function fails
-    abuseipdb "$domain" >> "$temp_file" 2>/dev/null || true
-    subcenter "$domain" >> "$temp_file" 2>/dev/null || true
-    nice_subfinder "$domain" >> "$temp_file" 2>/dev/null || true
-    nice_chaos "$domain" >> "$temp_file" 2>/dev/null || true
-    crtsh "$domain" >> "$temp_file" 2>/dev/null || true
-    nice_gau "$domain" >> "$temp_file" 2>/dev/null || true
-    nice_wayback "$domain" >> "$temp_file" 2>/dev/null || true
+    abuseipdb "$domain" 2>/dev/null | tee -a "$temp_file" >/dev/null || true
+    subcenter "$domain" 2>/dev/null | tee -a "$temp_file" >/dev/null || true
+    nice_subfinder "$domain" 2>/dev/null | tee -a "$temp_file" >/dev/null || true
+    nice_chaos "$domain" 2>/dev/null | tee -a "$temp_file" >/dev/null || true
+    crtsh "$domain" 2>/dev/null | tee -a "$temp_file" >/dev/null || true
+    nice_gau "$domain" 2>/dev/null | tee -a "$temp_file" >/dev/null || true
+    nice_wayback "$domain" 2>/dev/null | tee -a "$temp_file" >/dev/null || true
     
     # Remove duplicates and sort
     output_file="subdomains/$program/$domain.txt"
@@ -197,7 +197,7 @@ check_dependencies() {
 
 # Display usage information
 usage() {
-    echo "THEXRECON Subdomains Enumeration Script Tool"
+    echo "Subdomain Enumeration Automation Script"
     echo "--------------------------------------"
     echo "Usage: $0 [options]"
     echo ""
