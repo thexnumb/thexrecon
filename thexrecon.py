@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 from modules.abuseipdb import abuseipdb
 from modules.subcenter import subcenter
 from modules.subfinder import run_subfinder
@@ -28,12 +29,25 @@ def process_domain(domain, program):
     results.update(run_gau(domain))
     results.update(run_wayback(domain))
 
-    # Save results
+    # Regex for filtering valid subdomains (e.g., a.b.example.com)
+    subdomain_regex = re.compile(r'^([a-zA-Z0-9-]+\.){2,}[a-zA-Z]{2,}$')
+
+    clean_results = set()
+    for sub in results:
+        try:
+            # Extract domain part only (remove schemes/paths if present)
+            hostname = sub.split("//")[-1].split("/")[0]
+            if subdomain_regex.match(hostname):
+                clean_results.add(hostname)
+        except Exception:
+            continue
+
+    # Save cleaned subdomains
     with open(temp_file, "w") as f:
-        for sub in sorted(results):
+        for sub in sorted(clean_results):
             f.write(f"{sub}\n")
 
-    print(f"[+] Found {len(results)} subdomains for {domain}")
+    print(f"[+] Found {len(clean_results)} clean subdomains for {domain}")
 
 def process_program(program):
     """Process all domains in a program file."""
