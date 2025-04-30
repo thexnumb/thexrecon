@@ -4,6 +4,7 @@ import re
 from modules.abuseipdb import abuseipdb
 from modules.subcenter import subcenter
 from modules.subfinder import run_subfinder
+from modules.assetfinder import run_assetfinder
 from modules.chaos import run_chaos
 from modules.crtsh import crtsh
 from modules.gau import run_gau
@@ -28,6 +29,7 @@ def process_domain(domain, program):
     results.update(crtsh(domain))
     results.update(run_gau(domain))
     results.update(run_wayback(domain))
+    results.update(run_assetfinder(domain))
 
     # Regex for filtering valid subdomains (e.g., a.b.example.com)
     subdomain_regex = re.compile(r'^([a-zA-Z0-9-]+\.){2,}[a-zA-Z]{2,}$')
