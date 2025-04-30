@@ -9,6 +9,7 @@ from modules.chaos import run_chaos
 from modules.crtsh import crtsh
 from modules.gau import run_gau
 from modules.wayback import run_wayback
+from modules.amasstool import run_amass
 
 # Your AbuseIPDB session (replace it)
 ABUSEIPDB_SESSION = "YOUR-SESSION"
@@ -30,6 +31,7 @@ def process_domain(domain, program):
     results.update(run_gau(domain))
     results.update(run_wayback(domain))
     results.update(run_assetfinder(domain))
+    results.update(run_amass(domain))
 
     # Regex for filtering valid subdomains (e.g., a.b.example.com)
     subdomain_regex = re.compile(r'^([a-zA-Z0-9-]+\.){2,}[a-zA-Z]{2,}$')
