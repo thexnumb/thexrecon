@@ -13,6 +13,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"log"
 	"sort"
 	"strings"
 	"sync"
@@ -472,6 +473,7 @@ func CheckDependencies() bool {
 }
 
 func main() {
+	log.Println("This is a log message") // Example log usage
 	// Load configuration
 	config = LoadConfig()
 	
