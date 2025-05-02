@@ -1,8 +1,7 @@
 module github.com/thexnumb/thexrecon
 
-go 1.23
+go 1.19
 
-toolchain go1.24.2
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
