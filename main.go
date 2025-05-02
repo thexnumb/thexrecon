@@ -361,7 +361,7 @@ func RunAmass(domain string, result *Result) {
 }
 
 // Version represents the current version of the tool
-const Version = "1.0.3"
+const Version = "1.0.2"
 
 // ProcessDomain runs all subdomain enumeration methods on a domain
 func ProcessDomain(domain string) []string {
