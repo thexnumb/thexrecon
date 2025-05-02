@@ -42,23 +42,11 @@ You need Go 1.18 or higher installed. If you don't have Go installed:
 
 - **Windows**: Download and install from https://go.dev/dl/
 
-### 2. External Tools
-
-THEXRECON relies on several external tools. Install them with:
-
-```bash
-# Install Go-based tools
-go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-go install -v github.com/projectdiscovery/chaos-client/cmd/chaos@latest
-go install -v github.com/lc/gau/v2/cmd/gau@latest
-go install -v github.com/tomnomnom/assetfinder@latest
-go install -v github.com/OWASP/Amass/v3/...@latest
-```
-
 Additional requirements:
 - `curl` command-line tool (usually pre-installed on most systems)
-
-Make sure these tools are in your PATH.
+  
+### 2. Note about `Chaos-client` tool
+Consider that you should put the API-Key of the CHAOS to the `~/.configs/chaos/config.yaml`
 
 ## Installation
 
