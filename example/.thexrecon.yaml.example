@@ -1,0 +1,6 @@
+# THEXRECON Configuration File Example
+# Copy this file to ~/.thexrecon.yaml or to the current directory as .thexrecon.yaml
+
+# AbuseIPDB session cookie for WHOIS information
+# Get this by logging into https://www.abuseipdb.com/ and copying the session cookie
+abuseipdb_session: "YOUR-SESSION-COOKIE-HERE"
