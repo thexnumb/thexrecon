@@ -101,7 +101,7 @@ The tool requires an AbuseIPDB session cookie for one of its modules. You have t
      ```yaml
      abuseipdb_session: "YOUR-SESSION-COOKIE-HERE"
      ```
-   - An example config file is provided as `.thexrecon.yaml.example`
+   - An example config file is provided as `/example/.thexrecon.yaml.example`
 
 2. **Source code** (for manual installation):
    - Open `main.go` and update the `defaultConfig` variable
