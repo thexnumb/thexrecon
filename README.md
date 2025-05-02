@@ -1,6 +1,9 @@
-# THEXRECON Subdomain Enumeration Python Tool
+# THEXRECON Subdomain Enumeration Tool
 
-A comprehensive python tool for automating subdomain enumeration across multiple bug bounty programs using various techniques and sources.
+A high-performance Go tool for automating subdomain enumeration across multiple domains using various techniques and sources.
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/thexnumb/thexrecon)](https://goreportcard.com/report/github.com/thexnumb/thexrecon)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
 
@@ -12,56 +15,65 @@ A comprehensive python tool for automating subdomain enumeration across multiple
   - Certificate Transparency logs (crt.sh)
   - GetAllUrls (gau)
   - Wayback Machine
+  - Assetfinder
+  - Amass
 
-- **Organized Structure**: Automatically organizes results by program and domain
-- **Deduplication**: Ensures unique subdomains in the output files
+- **Concurrent Processing**: Uses Go routines for parallel execution of all modules
+- **Flexible Input Options**: Process a single domain or a list of domains from a file
+- **Flexible Output Options**: Output to stdout or save to a file
+- **Deduplication**: Ensures unique subdomains in the output
 - **Filtering**: Removes invalid and wildcard subdomains
-
-## Directory Structure
-
-```
-.
-├── programs/               # Contains domain lists for each program
-│   ├── google.txt          # Example file with domains like google.com, google.nl
-│   └── microsoft.txt       # Another example program
-├── subdomains/             # Stores discovered subdomains
-│   ├── google/             # Subdomains for Google
-│   │   ├── google.com.txt
-│   │   └── google.nl.txt
-│   └── microsoft/
-│       └── microsoft.com.txt
-│── modules/                # Contains of all modules
-│   │── __init__.py
-│   │── abuseipdb.py
-│   │── subcenter.py
-│   │── subfinder.py
-│   │── chaos.py
-│   │── crtsh.py
-│   │── gau.py
-│   │── wayback.py
-├── requirements.txt
-├── thexrecon.py            # Main script that executes all functions
-└── README.md               # This documentation
-```
 
 ## Prerequisites
 
-You need to install the following tools:
+Before installing THEXRECON, make sure you have the following prerequisites:
+
+### 1. Go Installation
+
+You need Go 1.18 or higher installed. If you don't have Go installed:
+
+- **Linux/Mac**: 
+  ```bash
+  # Download and install Go
+  wget https://go.dev/dl/go1.20.4.linux-amd64.tar.gz
+  sudo tar -C /usr/local -xzf go1.20.4.linux-amd64.tar.gz
+  
+  # Add Go to your PATH
+  echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.profile
+  source ~/.profile
+  ```
+
+- **Windows**: Download and install from https://go.dev/dl/
+
+### 2. External Tools
+
+THEXRECON relies on several external tools. Install them with:
 
 ```bash
-# Install python requirements
-pip install -r requirements.txt 
-
 # Install Go-based tools
 go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 go install -v github.com/projectdiscovery/chaos-client/cmd/chaos@latest
 go install -v github.com/lc/gau/v2/cmd/gau@latest
-go install -v github.com/tomnomnom/unfurl@latest
+go install -v github.com/tomnomnom/assetfinder@latest
+go install -v github.com/OWASP/Amass/v3/...@latest
 ```
+
+Additional requirements:
+- `curl` command-line tool (usually pre-installed on most systems)
 
 Make sure these tools are in your PATH.
 
-## Setup
+## Installation
+
+### Option 1: Install directly with Go
+
+```bash
+go install github.com/thexnumb/thexrecon@latest
+```
+
+This will download, compile, and install the tool to your `$GOPATH/bin` directory, which should be in your PATH.
+
+### Option 2: Clone and build manually
 
 1. Clone the repository:
    ```bash
@@ -69,82 +81,110 @@ Make sure these tools are in your PATH.
    cd thexrecon
    ```
 
-2. Create program files:
+2. Build the tool:
    ```bash
-   mkdir -p programs
-   echo "google.com" > programs/google.txt
-   echo "microsoft.com" > programs/microsoft.txt
+   go build -o thexrecon
    ```
 
-3. Make the python script executable:
+3. (Optional) Install to your GOPATH:
    ```bash
-   chmod +x thexrecon.py
+   go install
    ```
 
-4. Update the **AbuseIPDB** session cookie:
-   - Open `thexrecon.py` and replace `YOUR-SESSION` in the `abuseipdb` function with your actual session cookie
+### Configuration
+
+The tool requires an AbuseIPDB session cookie for one of its modules. You have two ways to configure this:
+
+1. **Config file** (recommended): 
+   - Create a file named `.thexrecon.yaml` in your home directory or in the current directory
+   - Use the following format:
+     ```yaml
+     abuseipdb_session: "YOUR-SESSION-COOKIE-HERE"
+     ```
+   - An example config file is provided as `.thexrecon.yaml.example`
+
+2. **Source code** (for manual installation):
+   - Open `main.go` and update the `defaultConfig` variable
+
+To get your AbuseIPDB session cookie:
+1. Log in to https://www.abuseipdb.com/
+2. Open developer tools (F12)
+3. Go to the Application tab
+4. Look for the `abuseipdb_session` cookie and copy its value
 
 ## Usage
 
-### Process all programs
+If you installed with `go install`, you can run the tool directly:
 
 ```bash
-./thexrecon.py
+thexrecon -u example.com
 ```
 
-### Check dependencies
+If you built it manually, run it with:
 
 ```bash
-./thexrecon.py -c
+./thexrecon -u example.com
 ```
 
-### Process a specific program
+### Command Line Options
 
+| Option | Description |
+|--------|-------------|
+| `-u domain.com` | Process a single domain |
+| `-l domains.txt` | Process multiple domains from a file |
+| `-o results.txt` | Save output to a file (otherwise outputs to stdout) |
+| `-c` | Check dependencies and exit |
+| `-v` | Show version information |
+| `-h` | Show help information |
+
+### Examples
+
+Process a single domain:
 ```bash
-./thexrecon.py -p google
+thexrecon -u example.com
 ```
 
-### Process a specific domain in a program
-
+Process multiple domains from a file:
 ```bash
-./thexrecon.py -p google -d google.com
+thexrecon -l domains.txt
 ```
 
-### Get help
-
+Save output to a file:
 ```bash
-./thexrecon.py -h
+thexrecon -u example.com -o results.txt
 ```
 
-## Adding New Programs
-
-Create a new text file in the `programs/` directory with one domain per line:
-
+Check dependencies:
 ```bash
-# programs/newprogram.txt
+thexrecon -c
+```
+
+## Input File Format
+
+If using the `-l` option, create a text file with one domain per line:
+
+```
 example.com
 example.org
 other_example.net
 ```
 
-## Output
+Comments can be added by prefixing the line with `#`.
 
-The script will create text files containing discovered subdomains in the `subdomains/` directory, organized by program and domain:
+## Performance
 
-```
-subdomains/google/google.com.txt
-subdomains/microsoft/microsoft.com.txt
-```
-
-Each file contains a list of unique subdomains, one per line.
+This tool is optimized for performance by:
+- Using Go's concurrency model with goroutines
+- Processing multiple sources in parallel
+- Efficiently handling and filtering results
 
 ## Customization
 
-You can add or modify functions in the `thexrecon.py` script to include additional data sources or techniques.
+You can easily extend the tool by adding new modules in the `main.go` file.
 
 ## Notes
 
-- Some functions (like `crtsh`) require network access to external services
+- Some functions (like `CrtSh`) require network access to external services
 - The script includes error handling to prevent failures if a particular source is unavailable
 - Respect rate limits of the services you're querying to avoid IP blocks
 
