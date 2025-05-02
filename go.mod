@@ -1,6 +1,6 @@
 module github.com/thexnumb/thexrecon
 
-go 1.19
+go 1.23
 
 
 require (
