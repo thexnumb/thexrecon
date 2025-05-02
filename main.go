@@ -32,6 +32,9 @@ var defaultConfig = Config{
 	AbuseIPDBSession: "YOUR-SESSION",
 }
 
+// Global variable to control verbose output
+var silent bool
+
 // LoadConfig loads configuration from file
 func LoadConfig() Config {
 	config := defaultConfig
@@ -43,7 +46,7 @@ func LoadConfig() Config {
 		data, err := ioutil.ReadFile(configPath)
 		if err == nil {
 			if err := yaml.Unmarshal(data, &config); err == nil {
-				fmt.Println("Configuration loaded from", configPath)
+				printLog("Configuration loaded from %s", configPath)
 			}
 		}
 	}
@@ -52,7 +55,7 @@ func LoadConfig() Config {
 	data, err := ioutil.ReadFile(".thexrecon.yaml")
 	if err == nil {
 		if err := yaml.Unmarshal(data, &config); err == nil {
-			fmt.Println("Configuration loaded from .thexrecon.yaml")
+			printLog("Configuration loaded from .thexrecon.yaml")
 		}
 	}
 
@@ -112,13 +115,20 @@ func (r *Result) Size() int {
 	return len(r.Subdomains)
 }
 
+// Helper function for printing logs when not in silent mode
+func printLog(format string, args ...interface{}) {
+	if !silent {
+		fmt.Printf(format+"\n", args...)
+	}
+}
+
 // AbuseIPDB fetches WHOIS information from AbuseIPDB
 func AbuseIPDB(domain string, session string, result *Result) {
-	fmt.Printf("[+] Running AbuseIPDB for %s\n", domain)
+	printLog("[+] Running AbuseIPDB for %s", domain)
 	
 	// Skip if no session is configured
 	if session == "" {
-		fmt.Println("[!] Skipping AbuseIPDB: No session configured")
+		printLog("[!] Skipping AbuseIPDB: No session configured")
 		return
 	}
 	
@@ -127,7 +137,7 @@ func AbuseIPDB(domain string, session string, result *Result) {
 	
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Printf("[!] Error creating AbuseIPDB request: %s\n", err)
+		printLog("[!] Error creating AbuseIPDB request: %s", err)
 		return
 	}
 	
@@ -136,14 +146,14 @@ func AbuseIPDB(domain string, session string, result *Result) {
 	
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("[!] Error making AbuseIPDB request: %s\n", err)
+		printLog("[!] Error making AbuseIPDB request: %s", err)
 		return
 	}
 	defer resp.Body.Close()
 	
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		fmt.Printf("[!] Error parsing AbuseIPDB response: %s\n", err)
+		printLog("[!] Error parsing AbuseIPDB response: %s", err)
 		return
 	}
 	
@@ -160,24 +170,24 @@ func AbuseIPDB(domain string, session string, result *Result) {
 
 // SubdomainCenter fetches subdomains from Subdomain Center API
 func SubdomainCenter(domain string, result *Result) {
-	fmt.Printf("[+] Running Subdomain Center for %s\n", domain)
+	printLog("[+] Running Subdomain Center for %s", domain)
 	
 	url := fmt.Sprintf("https://api.subdomain.center/?domain=%s", domain)
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Printf("[!] Error making Subdomain Center request: %s\n", err)
+		printLog("[!] Error making Subdomain Center request: %s", err)
 		return
 	}
 	defer resp.Body.Close()
 	
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("[!] Subdomain Center returned non-OK status: %d\n", resp.StatusCode)
+		printLog("[!] Subdomain Center returned non-OK status: %d", resp.StatusCode)
 		return
 	}
 	
 	var subdomains []string
 	if err := json.NewDecoder(resp.Body).Decode(&subdomains); err != nil {
-		fmt.Printf("[!] Error decoding Subdomain Center response: %s\n", err)
+		printLog("[!] Error decoding Subdomain Center response: %s", err)
 		return
 	}
 	
@@ -186,24 +196,24 @@ func SubdomainCenter(domain string, result *Result) {
 
 // CrtSh fetches subdomains from crt.sh
 func CrtSh(domain string, result *Result) {
-	fmt.Printf("[+] Running crt.sh for %s\n", domain)
+	printLog("[+] Running crt.sh for %s", domain)
 	
 	url := fmt.Sprintf("https://crt.sh/?q=%%25.%s&output=json", domain)
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Printf("[!] Error making crt.sh request: %s\n", err)
+		printLog("[!] Error making crt.sh request: %s", err)
 		return
 	}
 	defer resp.Body.Close()
 	
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("[!] crt.sh returned non-OK status: %d\n", resp.StatusCode)
+		printLog("[!] crt.sh returned non-OK status: %d", resp.StatusCode)
 		return
 	}
 	
 	var data []map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		fmt.Printf("[!] Error decoding crt.sh response: %s\n", err)
+		printLog("[!] Error decoding crt.sh response: %s", err)
 		return
 	}
 	
@@ -220,12 +230,12 @@ func CrtSh(domain string, result *Result) {
 
 // RunSubfinder runs subfinder for subdomain enumeration
 func RunSubfinder(domain string, result *Result) {
-	fmt.Printf("[+] Running Subfinder for %s\n", domain)
+	printLog("[+] Running Subfinder for %s", domain)
 	
 	cmd := exec.Command("subfinder", "-d", domain, "-all", "-silent")
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("[!] Error running Subfinder: %s\n", err)
+		printLog("[!] Error running Subfinder: %s", err)
 		return
 	}
 	
@@ -242,12 +252,12 @@ func RunSubfinder(domain string, result *Result) {
 
 // RunChaos runs Chaos for subdomain enumeration
 func RunChaos(domain string, result *Result) {
-	fmt.Printf("[+] Running Chaos for %s\n", domain)
+	printLog("[+] Running Chaos for %s", domain)
 	
 	cmd := exec.Command("chaos", "-d", domain, "-silent")
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("[!] Error running Chaos: %s\n", err)
+		printLog("[!] Error running Chaos: %s", err)
 		return
 	}
 	
@@ -264,12 +274,12 @@ func RunChaos(domain string, result *Result) {
 
 // RunGAU runs GAU for subdomain discovery
 func RunGAU(domain string, result *Result) {
-	fmt.Printf("[+] Running GAU for %s\n", domain)
+	printLog("[+] Running GAU for %s", domain)
 	
 	cmd := exec.Command("gau", domain, "--threads", "10", "--subs")
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("[!] Error running GAU: %s\n", err)
+		printLog("[!] Error running GAU: %s", err)
 		return
 	}
 	
@@ -286,12 +296,12 @@ func RunGAU(domain string, result *Result) {
 
 // RunWayback fetches subdomains from the Wayback Machine
 func RunWayback(domain string, result *Result) {
-	fmt.Printf("[+] Running Wayback Machine for %s\n", domain)
+	printLog("[+] Running Wayback Machine for %s", domain)
 	
 	cmd := exec.Command("curl", "-s", fmt.Sprintf("https://web.archive.org/cdx/search/cdx?url=*%s/*&fl=original&collapse=urlkey", domain))
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("[!] Error running Wayback Machine: %s\n", err)
+		printLog("[!] Error running Wayback Machine: %s", err)
 		return
 	}
 	
@@ -308,12 +318,12 @@ func RunWayback(domain string, result *Result) {
 
 // RunAssetfinder runs assetfinder for subdomain enumeration
 func RunAssetfinder(domain string, result *Result) {
-	fmt.Printf("[+] Running Assetfinder for %s\n", domain)
+	printLog("[+] Running Assetfinder for %s", domain)
 	
 	cmd := exec.Command("assetfinder", domain)
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("[!] Error running Assetfinder: %s\n", err)
+		printLog("[!] Error running Assetfinder: %s", err)
 		return
 	}
 	
@@ -330,12 +340,12 @@ func RunAssetfinder(domain string, result *Result) {
 
 // RunAmass runs Amass for subdomain enumeration
 func RunAmass(domain string, result *Result) {
-	fmt.Printf("[+] Running Amass for %s\n", domain)
+	printLog("[+] Running Amass for %s", domain)
 	
 	cmd := exec.Command("amass", "enum", "-active", "-d", domain)
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("[!] Error running Amass: %s\n", err)
+		printLog("[!] Error running Amass: %s", err)
 		return
 	}
 	
@@ -355,7 +365,7 @@ const Version = "1.0.0"
 
 // ProcessDomain runs all subdomain enumeration methods on a domain
 func ProcessDomain(domain string) []string {
-	fmt.Printf("[*] Processing domain: %s\n", domain)
+	printLog("[*] Processing domain: %s", domain)
 	
 	result := NewResult()
 	var wg sync.WaitGroup
@@ -436,14 +446,14 @@ func ProcessDomain(domain string) []string {
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
-					fmt.Printf("[!] Error processing subdomain '%s': %v\n", sub, r)
+					printLog("[!] Error processing subdomain '%s': %v", sub, r)
 				}
 			}()
 			try(sub)
 		}()
 	}
 	
-	fmt.Printf("[+] Found %d clean subdomains for %s\n", cleanResults.Size(), domain)
+	printLog("[+] Found %d clean subdomains for %s", cleanResults.Size(), domain)
 	return cleanResults.GetAll()
 }
 
@@ -462,18 +472,37 @@ func CheckDependencies() bool {
 	for _, dep := range dependencies {
 		cmd := exec.Command("which", dep)
 		if err := cmd.Run(); err != nil {
-			fmt.Printf("[!] Missing dependency: %s\n", dep)
+			printLog("[!] Missing dependency: %s", dep)
 			allInstalled = false
 		} else {
-			fmt.Printf("[+] Found dependency: %s\n", dep)
+			printLog("[+] Found dependency: %s", dep)
 		}
 	}
 	
 	return allInstalled
 }
 
+// PrintBanner displays the tool's banner
+func PrintBanner() {
+	banner := `
+████████╗██╗  ██╗███████╗██╗  ██╗██████╗ ███████╗ ██████╗ ██████╗ ███╗   ██╗
+╚══██╔══╝██║  ██║██╔════╝╚██╗██╔╝██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║
+   ██║   ███████║█████╗   ╚███╔╝ ██████╔╝█████╗  ██║     ██║   ██║██╔██╗ ██║
+   ██║   ██╔══██║██╔══╝   ██╔██╗ ██╔══██╗██╔══╝  ██║     ██║   ██║██║╚██╗██║
+   ██║   ██║  ██║███████╗██╔╝ ██╗██║  ██║███████╗╚██████╗╚██████╔╝██║ ╚████║
+   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝
+                                                                             
+     THEXRECON v%s - Subdomain Enumeration Tool by @thexnumb
+     High-Performance Subdomain Discovery using Multiple Sources
+     ----------------------------------------------------------
+`
+	fmt.Printf(banner, Version)
+}
+
 func main() {
-	log.Println("This is a log message") // Example log usage
+	// Configure logging
+	log.SetOutput(ioutil.Discard) // Disable default logging
+	
 	// Load configuration
 	config = LoadConfig()
 	
@@ -483,22 +512,35 @@ func main() {
 	outputFile := flag.String("o", "", "Path to the output file (default: stdout)")
 	checkDeps := flag.Bool("c", false, "Check dependencies and exit")
 	showVersion := flag.Bool("v", false, "Show version information")
+	silentMode := flag.Bool("silent", false, "Silent mode - only output subdomains, no banner or logs")
 	
 	// Parse command-line flags
 	flag.Parse()
 	
+	// Set silent mode global variable
+	silent = *silentMode
+	
+	// Show banner if not in silent mode
+	if !silent {
+		PrintBanner()
+	}
+	
 	// Show version if requested
 	if *showVersion {
-		fmt.Printf("THEXRECON version %s\n", Version)
+		if silent {
+			fmt.Printf("%s\n", Version)
+		} else {
+			fmt.Printf("THEXRECON version %s\n", Version)
+		}
 		return
 	}
 	
 	// Check dependencies if requested
 	if *checkDeps {
 		if CheckDependencies() {
-			fmt.Println("All dependencies are installed")
+			printLog("All dependencies are installed")
 		} else {
-			fmt.Println("Some dependencies are missing")
+			printLog("Some dependencies are missing")
 		}
 		return
 	}
@@ -560,7 +602,7 @@ func main() {
 			fmt.Printf("Error writing to output file: %s\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("[+] Results saved to %s\n", *outputFile)
+		printLog("[+] Results saved to %s", *outputFile)
 	} else {
 		// Print to stdout
 		for _, result := range allResults {
