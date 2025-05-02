@@ -1,9 +1,6 @@
 # THEXRECON Subdomain Enumeration Tool
 
-A high-performance Go tool for automating subdomain enumeration across multiple domains using various techniques and sources.
-
-[![Go Report Card](https://goreportcard.com/badge/github.com/thexnumb/thexrecon)](https://goreportcard.com/report/github.com/thexnumb/thexrecon)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+A high-performance Go tool for automating subdomain enumeration across multiple domains using various techniques and sources by Thexnumb.
 
 ## Features
 
